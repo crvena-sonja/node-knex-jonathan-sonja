@@ -1,5 +1,9 @@
+'use strict';
+
 const express = require('express');
 const bodyParser = require('body-parser');
+const Treeize   = require('treeize');
+const tree  = new Treeize();
 
 const { DATABASE, PORT } = require('./config');
 
@@ -202,6 +206,17 @@ app.get('/restaurants/hydrate', (req, res) => {
     .then(results => res.json((hydrate(results))));
 });
 
+app.get('/restaurants/treeize', (req, res) => {
+  //const sig = ['id', 'name', 'cuisine', 'borough', 'grades:id', 'grades:grade', 'grades:score'];
+  knex.select('restaurants.id', 'name', 'cuisine', 'borough', 'grades.id as grades:id', 'grade as grades:grade', 'score as grades:score')
+    .from('restaurants')
+    .innerJoin('grades', 'restaurants.id', 'grades.restaurant_id')
+    .orderBy('id', 'asc')
+    .limit(10)
+    .then(results => { res.json(tree.grow(results).getData());  });
+});
+
+
 app.get('/restaurants/dehydrate', (req, res) => {
   knex.select('restaurants.id', 'name', 'cuisine', 'borough', 'grades.id as gradeId', 'grade', 'score')
     .from('restaurants')
@@ -210,6 +225,40 @@ app.get('/restaurants/dehydrate', (req, res) => {
     .limit(10)
     .then(results => res.json(dehydrate(hydrate(results))));
 });
+
+
+// {name: 'Food Place 2',
+//     borough: 'Brooklyn',
+//     cuisine: 'Burgers',
+//     address_building_number: '987',
+//     address_street: 'Atlantic Avenue',
+//     address_zipcode: '11231'},
+
+app.post('/restaurants/', (req, res) => {
+  const obj = req.body;
+  knex('restaurants').insert({
+    name: obj['name'],
+    borough: obj['borough'],
+    cuisine: obj['cuisine'] 
+  }).returning('id')
+  .then(result => {
+    console.log('am i here??? ', result);
+    const grades = [];
+    for( let i = 0; i < obj['grades'].length; i++){
+      let grade = {restaurant_id: result[0], date: new Date()};
+      Object.assign(grade, obj['grades'][i]);
+      grades.push(grade);
+    }
+    return grades;
+  }).then(results => {
+    console.log('where are you.....' + JSON.stringify(results, null, 2));
+    return knex('grades').insert(results);
+  }).then(results => res.status(200).json(results))
+  .catch(function(error){
+    console.error(error);
+  });
+});
+
 
 
 app.listen(PORT);
