@@ -25,7 +25,7 @@ app.get('/restaurants/d2', (req, res) => {
 app.get('/restaurants/d3', (req, res) => {
 
   knex.select('id', 'name', 'cuisine', 'borough')
-    .select(knex.raw("CONCAT(address_building_number, ' ', address_street, ' ', address_zipcode ) as address"))
+    .select(knex.raw('CONCAT(address_building_number, \' \', address_street, \' \', address_zipcode ) as address'))
     .from('restaurants')
     .limit(10)
     .then(results => res.json(results));
@@ -149,7 +149,7 @@ app.get('/restaurants/d14', (req, res) => {
 //     .select(knex.raw("CONCAT(address_building_number, ' ', address_street , ' ', address_zipcode ) as address)")
 //     .from('restaurants')
 //     .where('restaurants.id', req.params.id)
-//     .innerJoin('grades', 'restaurants.id', 'grades.restaurant_id')    
+//     .innerJoin('grades', 'restaurants.id', 'grades.restaurant_id')
 //     .orderBy('date', 'desc')
 //     .then(results => res.json(results)));
 // });
@@ -177,7 +177,22 @@ function hydrate(array){
   return someObject;
 }
 
-
+function dehydrate(obj) {
+  const arr = [];
+  Object.keys(obj).forEach(key => {
+    for(let i=0; i < obj[key].grades.length; i++){
+      arr.push({
+        name: obj[key].name,
+        cuisine: obj[key].cuisine,
+        borough: obj[key].borough,
+        gradeId: obj[key].grades[i].id,
+        grade: obj[key].grades[i].grade,
+        score: obj[key].grades[i].score
+      });
+    }
+  });
+  return arr;
+}
 app.get('/restaurants/hydrate', (req, res) => {
   knex.select('restaurants.id', 'name', 'cuisine', 'borough', 'grades.id as gradeId', 'grade', 'score')
     .from('restaurants')
@@ -187,7 +202,14 @@ app.get('/restaurants/hydrate', (req, res) => {
     .then(results => res.json((hydrate(results))));
 });
 
-
+app.get('/restaurants/dehydrate', (req, res) => {
+  knex.select('restaurants.id', 'name', 'cuisine', 'borough', 'grades.id as gradeId', 'grade', 'score')
+    .from('restaurants')
+    .innerJoin('grades', 'restaurants.id', 'grades.restaurant_id')
+    .orderBy('id', 'asc')
+    .limit(10)
+    .then(results => res.json(dehydrate(hydrate(results))));
+});
 
 
 app.listen(PORT);
