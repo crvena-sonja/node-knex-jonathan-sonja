@@ -8,21 +8,21 @@ const knex = require('knex')(DATABASE);
 const app = express();
 app.use(bodyParser.json());
 
-app.get('/restaurants/1', (req, res) => {
+app.get('/restaurants/d1', (req, res) => {
 
   knex.select('*')
     .from('restaurants')
     .then(results => res.json(results));
 });
 
-app.get('/restaurants/2', (req, res) => {
+app.get('/restaurants/d2', (req, res) => {
 
   knex('restaurants')
     .where('cuisine', 'Italian')
     .then(results => res.json(results));
 });
 
-app.get('/restaurants/3', (req, res) => {
+app.get('/restaurants/d3', (req, res) => {
 
   knex.select('id', 'name', 'cuisine', 'borough')
     .from('restaurants')
@@ -30,20 +30,20 @@ app.get('/restaurants/3', (req, res) => {
     .then(results => res.json(results));
 });
 
-app.get('/restaurants/4', (req, res) => {
+app.get('/restaurants/d4', (req, res) => {
 
   knex('restaurants').count('id')
     .where('cuisine', 'Thai')
     .then(results => res.json(results));
 });
 
-app.get('/restaurants/5', (req, res) => {
+app.get('/restaurants/d5', (req, res) => {
 
   knex('restaurants').count('id')
     .then(results => res.json(results));
 });
 
-app.get('/restaurants/6', (req, res) => {
+app.get('/restaurants/d6', (req, res) => {
 
   knex('restaurants').count('id')
     .where({
@@ -52,7 +52,7 @@ app.get('/restaurants/6', (req, res) => {
     .then(results => res.json(results));
 });
 
-app.get('/restaurants/7', (req, res) => {
+app.get('/restaurants/d7', (req, res) => {
 
   knex('restaurants')
     .where('cuisine', 'Italian')
@@ -60,7 +60,7 @@ app.get('/restaurants/7', (req, res) => {
     .then(results => res.json(results));
 });
 
-app.get('/restaurants/8', (req, res) => {
+app.get('/restaurants/d8', (req, res) => {
 
   knex('restaurants').insert([{name: 'Byte Cafe',
     borough: 'Brooklyn',
@@ -71,7 +71,7 @@ app.get('/restaurants/8', (req, res) => {
     .then(results => res.json(results));
 });
 
-app.get('/restaurants/9', (req, res) => {
+app.get('/restaurants/d9', (req, res) => {
 
   knex('restaurants').insert([{name: 'Food Place',
     borough: 'Brooklyn',
@@ -83,7 +83,7 @@ app.get('/restaurants/9', (req, res) => {
     .then(results => res.json(results));
 });
 
-app.get('/restaurants/10', (req, res) => {
+app.get('/restaurants/d10', (req, res) => {
 
   knex('restaurants').insert([{name: 'Food Place 2',
     borough: 'Brooklyn',
@@ -106,7 +106,7 @@ app.get('/restaurants/10', (req, res) => {
     .then(results => res.json(results));
 });
 
-app.get('/restaurants/11', (req, res) => {
+app.get('/restaurants/d11', (req, res) => {
 
   knex('restaurants')
   .where('nyc_restaurant_id', '30191841')
@@ -116,7 +116,7 @@ app.get('/restaurants/11', (req, res) => {
   .then(results => res.json(results));
 });
 
-app.get('/restaurants/12', (req, res) => {
+app.get('/restaurants/d12', (req, res) => {
 
   knex('grades')
   .where('id', '10')
@@ -124,7 +124,7 @@ app.get('/restaurants/12', (req, res) => {
   .then(results => res.json(results));
 });
 
-app.get('/restaurants/13', (req, res) => {
+app.get('/restaurants/d13', (req, res) => {
 
   knex('restaurants')
   .where('id', '22')
@@ -135,12 +135,22 @@ app.get('/restaurants/13', (req, res) => {
   });
 });
 
-app.get('/restaurants/14', (req, res) => {
+app.get('/restaurants/d14', (req, res) => {
 
   knex('grades')
   .where('id', '10')
   .del()
   .then(results => res.json(results));
+});
+
+app.get('/restaurants/:id', (req, res) => {
+  knex.select('restaurants.id', 'name', 'cuisine', 'borough', 'grades.id', 'grade', 'date as inspectionDate', 'score')
+    .from('restaurants')
+    .where('restaurants.id', req.params.id)
+    .innerJoin('grades', 'restaurants.id', 'grades.restaurant_id')    
+    .orderBy('date', 'desc')
+    .limit(1)
+    .then(results => res.json(results));
 });
 
 app.listen(PORT);
