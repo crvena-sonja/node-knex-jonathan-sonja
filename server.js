@@ -144,14 +144,50 @@ app.get('/restaurants/d14', (req, res) => {
   .then(results => res.json(results));
 });
 
-app.get('/restaurants/:id', (req, res) => {
-  knex.first('restaurants.id', 'name', 'cuisine', 'borough', 'grades.id', 'grade', 'date as inspectionDate', 'score')
-    .select(knex.raw("CONCAT(address_building_number, ' ', address_street, ' ',address_zipcode ) as address"))
+// app.get('/restaurants/:id', (req, res) => {
+//   knex.first('restaurants.id', 'name', 'cuisine', 'borough', 'grades.id', 'grade', 'date as inspectionDate', 'score')
+//     .select(knex.raw("CONCAT(address_building_number, ' ', address_street , ' ', address_zipcode ) as address)")
+//     .from('restaurants')
+//     .where('restaurants.id', req.params.id)
+//     .innerJoin('grades', 'restaurants.id', 'grades.restaurant_id')    
+//     .orderBy('date', 'desc')
+//     .then(results => res.json(results)));
+// });
+
+function hydrate(array){
+  let someObject = {};
+  array.forEach(row => {
+    if (!(row.id in someObject))
+    {
+      someObject[row.id] = {
+        name: row.name,
+        cuisine: row.cuisine,
+        borough: row.borough,
+        grades: []
+      };
+    }
+    else{
+      someObject[row.id].grades.push({
+        id: row.gradeId,
+        grade: row.grade,
+        score: row.score
+      });
+    }
+  });
+  return someObject;
+}
+
+
+app.get('/restaurants/hydrate', (req, res) => {
+  knex.select('restaurants.id', 'name', 'cuisine', 'borough', 'grades.id as gradeId', 'grade', 'score')
     .from('restaurants')
-    .where('restaurants.id', req.params.id)
-    .innerJoin('grades', 'restaurants.id', 'grades.restaurant_id')    
-    .orderBy('date', 'desc')
-    .then(results => res.json(results));
+    .innerJoin('grades', 'restaurants.id', 'grades.restaurant_id')
+    .orderBy('id', 'asc')
+    .limit(10)
+    .then(results => res.json((hydrate(results))));
 });
+
+
+
 
 app.listen(PORT);
