@@ -1,6 +1,9 @@
-const knex = require('knex')(DEV);
+//'use strict';
+
+//const knex = require('knex')(DEV);
 const { DATABASE, PORT } = require('./config');
 const knex = require('knex')(DATABASE);
+let restaurants = [];
 
 // clear the console before each run
 process.stdout.write('\033c');
@@ -14,7 +17,7 @@ knex.select().from('restaurants')
 knex
   .select()
   .from('restaurants')
-  .then(results => console.log(JSON.stringify(results, null, 2)));
+  .then(results => {console.log(JSON.stringify(results, null, 2)); restaurants = results;});
 
 //2: get Italin restaurants
 knex
@@ -74,18 +77,18 @@ knex.select('id', 'name')
 //8: Create a restaurant
 knex
   .insert({
-    name: "Byte Café",
-    borough: "Brooklyn",
-    cuisine: "coffee",
+    name: 'Byte Café',
+    borough: 'Brooklyn',
+    cuisine: 'coffee',
     address_building_number: '123',
     address_street: 'Atlantic Avenue',
     address_zipcode: '11231'
   })
-  .into("restaurants")
+  .into('restaurants')
   .then(result => console.log(JSON.stringify(result, null, 2)));
 
 // and verify 
-knex.select("*")
+knex.select('*')
   .from('restaurants')
   .where('name', 'Byte Café')
   .then(result => console.log(JSON.stringify(result, null, 2)));
@@ -93,9 +96,9 @@ knex.select("*")
 //9: Create a restaurant and return id and name
 knex
   .insert({
-    name: "Ray's Famous Pizza",
-    borough: "Brooklyn",
-    cuisine: "Pizza",
+    name: 'Ray\'s Famous Pizza',
+    borough: 'Brooklyn',
+    cuisine: 'Pizza',
     address_building_number: '234',
     address_street: 'Awesome Avenue',
     address_zipcode: '11231'
@@ -172,7 +175,7 @@ restaurants.forEach(row => {
       cuisine: row.cuisine,
       borough: row.borough,
       grades: []
-    }
+    };
   }
   hydrated[row.id].grades.push({
     gradeId: row.gradeId,
@@ -180,7 +183,7 @@ restaurants.forEach(row => {
     score: row.score
   });
 });
-console.log(JSON.stringify(hydrated, null, 2))
+console.log(JSON.stringify(hydrated, null, 2));
 
 // Destroy the connection pool
-knex.destroy().then(() => { console.log('closed') })
+knex.destroy().then(() => { console.log('closed'); });
